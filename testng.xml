@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Test Suite" thread-count ="3" parallel="methods">
+
+	<listeners>
+		<listener class-name="com.demo.qa.utilities.TestListener"/>
+	</listeners>
+
+	<test name="Testing 1">
+		<classes>
+			<class name="com.demo.qa.tests.ProductFilterTest"/>
+
+		</classes>
+	</test> <!-- Test -->
+
+
+</suite> <!-- Suite -->
