@@ -7,9 +7,7 @@ import java.util.Locale;
  */
 public enum BrowserType {
     CHROME("chrome"),
-    CHROME_HEADLESS("chrome-headless"),
     FIREFOX("firefox"),
-    FIREFOX_HEADLESS("firefox-headless"),
     EDGE("edge"),
     SAFARI("safari");
 
