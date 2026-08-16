@@ -16,39 +16,42 @@ import java.time.Duration;
 
 public class HomePage {
 
-	WebDriver driver;
+    private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(20);
 
-	public By logo = By.cssSelector("div.logo");
-	public By perfumeMenu = By.xpath("//li[@data-uid='FragrancesNavNode_DE']//a");
-	public By shadowHostCookie = By.cssSelector("#usercentrics-root");
-	public By acceptAllCookieButton = By.cssSelector("button[data-testid='uc-accept-all-button']");
-	public By leftContents = By.xpath("//div[contains(@class, 'left-content-slot')]");
+    private final WebDriver driver;
+    private final WebDriverWait wait;
 
-	public HomePage(WebDriver driver) {
-		this.driver = driver;
-	}
+    public By logo = By.cssSelector("div.logo");
+    public By perfumeMenu = By.xpath("//li[@data-uid='FragrancesNavNode_DE']//a");
+    public By shadowHostCookie = By.cssSelector("#usercentrics-root");
+    public By acceptAllCookieButton = By.cssSelector("button[data-testid='uc-accept-all-button']");
+    public By leftContents = By.xpath("//div[contains(@class, 'left-content-slot')]");
 
-	/**
-	 * Verify home page loaded
-	 * 
-	 */
-	public void verifyHomepageLoaded() {
-		Assert.assertEquals(driver.getCurrentUrl(), AppConfig.BASE_URL);
-		Report.log(Status.PASS, "Url: " + driver.getCurrentUrl());
-		Assert.assertTrue(driver.findElement(logo).isDisplayed(), "Logo not displayed");
-		Report.log(Status.PASS, "Home page loaded");
-		if(!DriverManager.isDriverInstanceOf("safari")){
-			WebElement shadowHost = driver.findElement(shadowHostCookie);
-			SearchContext shadowRoot = shadowHost.getShadowRoot();
-			shadowRoot.findElement(acceptAllCookieButton).click();
-			Report.log(Status.PASS, "Accepted all Cookies");
-		}
-	}
+    public HomePage(WebDriver driver) {
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, PAGE_LOAD_TIMEOUT);
+    }
 
-	public void navigateToPerfumePage() {
-		driver.findElement(perfumeMenu).click();
-		new WebDriverWait(driver, Duration.ofSeconds(20)).until(ExpectedConditions.visibilityOfElementLocated(leftContents));
-		Report.log(Status.PASS, "Navigated to the Perfume page");
-	}
+    /**
+     * Verifies that the home page is loaded and handles the cookie consent dialog
+     * when it is supported by the current browser.
+     */
+    public void verifyHomepageLoaded() {
+        Assert.assertEquals(driver.getCurrentUrl(), AppConfig.BASE_URL);
+        Report.log(Status.PASS, "Url: " + driver.getCurrentUrl());
+        Assert.assertTrue(driver.findElement(logo).isDisplayed(), "Logo not displayed");
+        Report.log(Status.PASS, "Home page loaded");
+        if (!DriverManager.isDriverInstanceOf("safari")) {
+            WebElement shadowHost = driver.findElement(shadowHostCookie);
+            SearchContext shadowRoot = shadowHost.getShadowRoot();
+            shadowRoot.findElement(acceptAllCookieButton).click();
+            Report.log(Status.PASS, "Accepted all Cookies");
+        }
+    }
 
+    public void navigateToPerfumePage() {
+        driver.findElement(perfumeMenu).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(leftContents));
+        Report.log(Status.PASS, "Navigated to the Perfume page");
+    }
 }
