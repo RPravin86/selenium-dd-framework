@@ -5,20 +5,81 @@ import com.demo.qa.utilities.PropertiesFileReader;
 import java.util.Properties;
 
 /**
- * It is an interface contains application config values as constant for configuration of the application
+ * Centralized configuration provider for the automation framework.
  *
- * @author Pravin
+ * <p>Application and framework configuration is loaded from the
+ * {@code config.properties} file and exposed through immutable constants.</p>
  *
+ * <p>This class is intentionally non-instantiable because configuration
+ * values are consumed at framework level rather than through object state.</p>
  */
-public interface AppConfig {
+public final class AppConfig {
 
-	String ROOT = System.getProperty("user.dir");
-	Properties CONFIG = PropertiesFileReader.read(ROOT + "/config.properties");
+    private static final String ROOT = System.getProperty("user.dir");
 
-	String BASE_URL = CONFIG.getProperty("baseUrl");
-	String BROWSER_NAME = CONFIG.getProperty("browser");
-	String REPORT_TITLE = CONFIG.getProperty("reportTitle");
-	String REPORT_PATH = CONFIG.getProperty("reportPath");
+    private static final String CONFIG_FILE_PATH =
+            ROOT + "/config.properties";
 
-	String TEST_RESOURCE_PATH = ROOT + "/src/test/resources/test-data";
+    private static final Properties CONFIG =
+            PropertiesFileReader.read(CONFIG_FILE_PATH);
+
+    /**
+     * Base URL of the application under test.
+     */
+    public static final String BASE_URL =
+            getRequiredProperty("baseUrl");
+
+    /**
+     * Default browser used when no browser is supplied through TestNG.
+     */
+    public static final String BROWSER_NAME =
+            getRequiredProperty("browser");
+
+    /**
+     * Title displayed in the test execution report.
+     */
+    public static final String REPORT_TITLE =
+            getRequiredProperty("reportTitle");
+
+    /**
+     * Base path used for generated test reports.
+     */
+    public static final String REPORT_PATH =
+            getRequiredProperty("reportPath");
+
+    /**
+     * Location of JSON and other test-data resources.
+     */
+    public static final String TEST_RESOURCE_PATH =
+            ROOT + "/src/test/resources/test-data";
+
+    /**
+     * Retrieves a mandatory configuration property.
+     *
+     * @param propertyName name of the required property
+     * @return trimmed property value
+     * @throws IllegalStateException when the property is missing or blank
+     */
+    private static String getRequiredProperty(String propertyName) {
+
+        String value = CONFIG.getProperty(propertyName);
+
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(
+                    "Required configuration property '"
+                            + propertyName
+                            + "' is missing or blank in "
+                            + CONFIG_FILE_PATH
+            );
+        }
+
+        return value.trim();
+    }
+
+    /**
+     * Prevents accidental instantiation of the configuration class.
+     */
+    private AppConfig() {
+        // Utility/configuration class - no instantiation.
+    }
 }
