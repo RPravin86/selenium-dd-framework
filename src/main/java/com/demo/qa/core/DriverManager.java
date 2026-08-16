@@ -11,114 +11,121 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 
 import java.time.Duration;
+import java.util.Locale;
 
-public class DriverManager {
+/**
+ * Thread-safe WebDriver lifecycle manager for parallel TestNG execution.
+ */
+public final class DriverManager {
 
-	protected static ThreadLocal<WebDriver> driverThread = new ThreadLocal<>();
-	static Logger log = LogManager.getLogger(DriverManager.class);
+    private static final ThreadLocal<WebDriver> DRIVER = new ThreadLocal<>();
+    private static final Logger LOG = LogManager.getLogger(DriverManager.class);
+    private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(60);
 
-	private DriverManager()	{
-		// No external instantiation allowed
-	}
+    private DriverManager() {
+        // Utility class - no external instantiation.
+    }
 
-	/**
-	 * This method is used to get the driver.
-	 *
-	 * @return WebDriver
-	 */
-	public static WebDriver getDriver() {
-		return driverThread.get();
-	}
+    /**
+     * Returns the WebDriver associated with the current test thread.
+     *
+     * @return current thread's WebDriver, or null when it has not been initialized
+     */
+    public static WebDriver getDriver() {
+        return DRIVER.get();
+    }
 
+    /**
+     * Creates and configures a WebDriver for the current test thread.
+     *
+     * @param browserName browser name: chrome, chrome-headless, firefox,
+     *                    firefox-headless, edge, or safari
+     */
+    public static void initialize(String browserName) {
+        if (browserName == null || browserName.isBlank()) {
+            throw new IllegalArgumentException("Browser name must not be null or blank");
+        }
 
-	/**
-	 * This method initializes the driver and launches browser.
-	 *
-	 * @param browser: Name of browser
-	 */
-	public static void initialize(String browser)  {
-		driverThread.set(getDriver(browser));
-        log.info("Browser configured: {}", browser.toUpperCase());
+        if (DRIVER.get() != null) {
+            quit();
+        }
 
-		getDriver().manage().window().maximize();
-		getDriver().manage().deleteAllCookies();
+        WebDriver driver = createDriver(browserName);
+        DRIVER.set(driver);
 
-		getDriver().manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-		getDriver().manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
-	}
+        driver.manage().window().maximize();
+        driver.manage().deleteAllCookies();
+        driver.manage().timeouts().pageLoadTimeout(PAGE_LOAD_TIMEOUT);
 
-	/**
-	 * This method is used to get the driver WRT browser parameter.
-	 * Supported browsers - Chrome, Chrome-headless Firefox, Firefox-headless, and Edge.
-	 *
-	 * @param browserName: Name of browser
-	 * @return WebDriver
-	 */
-	public static WebDriver getDriver(String browserName) {
-		WebDriver driver = null;
+        LOG.info("WebDriver initialized: browser={}, thread={}",
+                browserName, Thread.currentThread().getId());
+    }
 
-		switch (browserName) {
-			case "chrome":
-				driver = new ChromeDriver();
-				break;
-			case "chrome-headless":
-				driver = new ChromeDriver(new ChromeOptions().addArguments("--headless=new"));
-				break;
-			case "firefox":
-				driver = new FirefoxDriver();
-				break;
-			case "firefox-headless":
-				driver = new FirefoxDriver(new FirefoxOptions().addArguments("-headless"));
-				break;
-			case "edge":
-				driver = new EdgeDriver();
-				break;
-			case "safari":
-				driver = new SafariDriver();
-				break;
-			default:
-				System.out.println("No driver available for:" + browserName);
-		}
-		return driver;
-	}
+    /**
+     * Creates a WebDriver for the requested browser.
+     */
+    private static WebDriver createDriver(String browserName) {
+        String browser = browserName.trim().toLowerCase(Locale.ROOT);
 
-	public static boolean isDriverInstanceOf(String browserName){
-		boolean flag = false;
-		switch (browserName) {
-			case "chrome":
-			case "chrome-headless":
-				flag = getDriver() instanceof ChromeDriver;
-				break;
-			case "firefox":
-			case "firefox-headless":
-				flag = getDriver() instanceof FirefoxDriver;
-				break;
-			case "edge":
-				flag = getDriver() instanceof EdgeDriver;
-				break;
-			case "safari":
-				flag = getDriver() instanceof SafariDriver;
-				break;
-			default:
-				System.out.println("No driver available for:" + browserName);
-		}
-		return flag;
-	}
+        return switch (browser) {
+            case "chrome" -> new ChromeDriver();
+            case "chrome-headless" -> new ChromeDriver(
+                    new ChromeOptions().addArguments("--headless=new"));
+            case "firefox" -> new FirefoxDriver();
+            case "firefox-headless" -> new FirefoxDriver(
+                    new FirefoxOptions().addArguments("-headless"));
+            case "edge" -> new EdgeDriver();
+            case "safari" -> new SafariDriver();
+            default -> throw new IllegalArgumentException(
+                    "Unsupported browser: " + browserName
+                            + ". Supported browsers: chrome, chrome-headless, "
+                            + "firefox, firefox-headless, edge, safari");
+        };
+    }
 
-	/**
-	 * This method is used to close the browser
-	 *
-	 */
-	public static void quit() {
-		getDriver().manage().deleteAllCookies();
-		getDriver().close();
-	}
+    /**
+     * Checks whether the current thread is using the requested browser driver.
+     */
+    public static boolean isDriverInstanceOf(String browserName) {
+        WebDriver driver = getDriver();
+        if (driver == null || browserName == null) {
+            return false;
+        }
 
-	/**
-	 * This method is used to remove the ThreadLocal driver.
-	 */
-	public static void terminate() {
-		driverThread.remove();
-	}
+        String browser = browserName.trim().toLowerCase(Locale.ROOT);
+        return switch (browser) {
+            case "chrome", "chrome-headless" -> driver instanceof ChromeDriver;
+            case "firefox", "firefox-headless" -> driver instanceof FirefoxDriver;
+            case "edge" -> driver instanceof EdgeDriver;
+            case "safari" -> driver instanceof SafariDriver;
+            default -> false;
+        };
+    }
 
+    /**
+     * Terminates the current WebDriver session safely.
+     */
+    public static void quit() {
+        WebDriver driver = DRIVER.get();
+        if (driver == null) {
+            return;
+        }
+
+        try {
+            driver.quit();
+            LOG.info("WebDriver session terminated: thread={}",
+                    Thread.currentThread().getId());
+        } finally {
+            DRIVER.remove();
+        }
+    }
+
+    /**
+     * Removes the thread-local driver reference.
+     * Prefer {@link #quit()} during normal test teardown so the browser session
+     * is also terminated.
+     */
+    public static void terminate() {
+        DRIVER.remove();
+    }
 }
