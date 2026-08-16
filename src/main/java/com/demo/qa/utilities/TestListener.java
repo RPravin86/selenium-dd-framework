@@ -3,69 +3,121 @@ package com.demo.qa.utilities;
 import com.aventstack.extentreports.Status;
 import com.demo.qa.core.DriverManager;
 import com.demo.qa.reportmanager.Report;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-public class TestListener implements ITestListener {
+/**
+ * TestNG listener responsible for test lifecycle logging, reporting,
+ * and failure screenshots.
+ *
+ * <p>The listener integrates TestNG execution events with the framework
+ * reporting layer and captures a screenshot when a failed test has a
+ * screenshot-capable WebDriver.</p>
+ */
+public final class TestListener implements ITestListener {
 
-	static Logger log = LogManager.getLogger(Report.class);
+    private static final Logger LOG = LogManager.getLogger(TestListener.class);
 
-	public void onTestStart(ITestResult result) {
-		System.out.println("\n" + "  ***** Test Executing : " + result.getName());
-        log.info("  ***** Test Executing : {}", result.getName());
-		Report.startTest(result.getMethod().getMethodName(), result.getMethod().getDescription());
-	}
+    private static final DateTimeFormatter SCREENSHOT_TIMESTAMP =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
-	public void onTestSuccess(ITestResult result) {
-        log.info("Test Passed : {}", result.getName());
-		Report.log(Status.PASS, "	Test Passed", result.getName());
-	}
+    @Override
+    public void onTestStart(ITestResult result) {
+        LOG.info("***** Test Executing: {}", result.getName());
+        Report.startTest(
+                result.getMethod().getMethodName(),
+                result.getMethod().getDescription());
+    }
 
-	public void onTestFailure(ITestResult result) {
-        log.info("Test Failed : {}", result.getName());
-		try {
-			String date = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+    @Override
+    public void onTestSuccess(ITestResult result) {
+        LOG.info("Test Passed: {}", result.getName());
+        Report.log(Status.PASS, "\tTest Passed", result.getName());
+    }
 
-			//Object currentInstance = result.getInstance();
-			TakesScreenshot ts = (TakesScreenshot) (DriverManager.getDriver());
+    @Override
+    public void onTestFailure(ITestResult result) {
+        LOG.error("Test Failed: {}", result.getName(), result.getThrowable());
 
-			File source = ts.getScreenshotAs(OutputType.FILE);
-			String destination = System.getProperty("user.dir") + "/screenshots/" + result.getName() + "_" + date + ".png";
-			File finalDestination = new File(destination);
+        try {
+            WebDriver driver = DriverManager.getDriver();
 
-			FileUtils.copyFile(source, finalDestination);
+            if (driver instanceof TakesScreenshot screenshotDriver) {
+                String timestamp = LocalDateTime.now().format(SCREENSHOT_TIMESTAMP);
+                Path destination = Path.of(
+                        System.getProperty("user.dir"),
+                        "screenshots",
+                        result.getName() + "_" + timestamp + ".png");
 
-			Report.log(Status.FAIL, "	Test Failed " + result.getThrowable(), result.getName());
-			Report.getTest().addScreenCaptureFromPath(destination);
-		} catch (Exception e) {
-			System.out.println("Exception: " + e.getMessage());
-		}
-	}
+                Files.createDirectories(destination.getParent());
 
-	public void onTestSkipped(ITestResult result) {
-        log.info("Test Skipped : {}", result.getName());
-		Report.log(Status.SKIP, "	Test Skipped " + result.getThrowable(), result.getName());
-	}
+                File source = screenshotDriver.getScreenshotAs(OutputType.FILE);
+                Files.copy(
+                        source.toPath(),
+                        destination,
+                        StandardCopyOption.REPLACE_EXISTING);
 
-	public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-		}
+                Report.log(
+                        Status.FAIL,
+                        "\tTest Failed " + result.getThrowable(),
+                        result.getName());
+                Report.getTest().addScreenCaptureFromPath(destination.toString());
+            } else {
+                LOG.warn("Screenshot unavailable for failed test: {}", result.getName());
+                Report.log(
+                        Status.FAIL,
+                        "\tTest Failed " + result.getThrowable(),
+                        result.getName());
+            }
+        } catch (IOException e) {
+            LOG.error("Unable to save screenshot for failed test: {}", result.getName(), e);
+            Report.log(
+                    Status.FAIL,
+                    "\tTest Failed " + result.getThrowable(),
+                    result.getName());
+        }
+    }
 
-	public void onStart(ITestContext context) {
-		System.out.println("\n" + "---------------- TEST EXECUTION STARTED ---------------- ");
-	}
+    @Override
+    public void onTestSkipped(ITestResult result) {
+        LOG.info("Test Skipped: {}", result.getName());
+        Report.log(
+                Status.SKIP,
+                "\tTest Skipped " + result.getThrowable(),
+                result.getName());
+    }
 
-	public void onFinish(ITestContext context) {
-		Report.endTest();
-		System.out.println("\n" + "---------------- TEST EXECUTION FINISHED ---------------- ");
-	}
+    /**
+     * Intentionally unused because the framework does not configure
+     * TestNG success-percentage based test execution.
+     */
+    @Override
+    public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
+        // Intentionally not handled.
+    }
+
+    @Override
+    public void onStart(ITestContext context) {
+        LOG.info("---------------- TEST EXECUTION STARTED ----------------");
+    }
+
+    @Override
+    public void onFinish(ITestContext context) {
+        Report.endTest();
+        LOG.info("---------------- TEST EXECUTION FINISHED ----------------");
+    }
 }
