@@ -5,13 +5,10 @@ import com.demo.qa.core.BaseTest;
 import com.demo.qa.core.ObjectRepo;
 import com.demo.qa.utilities.JsonFileReader;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
-
-@Listeners(com.demo.qa.utilities.TestListener.class)
 
 public class ProductFilterTest extends BaseTest {
 
