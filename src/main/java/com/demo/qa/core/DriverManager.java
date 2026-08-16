@@ -6,6 +6,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
@@ -27,24 +28,12 @@ public final class DriverManager {
     private static final ThreadLocal<WebDriver> DRIVER = new ThreadLocal<>();
     private static final Logger LOG = LogManager.getLogger(DriverManager.class);
 
-    /**
-     * Maximum time allowed for a page load to complete.
-     *
-     * <p>Element synchronization is intentionally handled through explicit
-     * waits in the page objects rather than relying on implicit waits.</p>
-     */
     private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(60);
 
     private DriverManager() {
         // Prevent external instantiation.
     }
 
-    /**
-     * Returns the WebDriver associated with the current test thread.
-     *
-     * @return the current thread's WebDriver, or {@code null} when a driver
-     *         has not been initialized
-     */
     public static WebDriver getDriver() {
         return DRIVER.get();
     }
@@ -77,38 +66,54 @@ public final class DriverManager {
     }
 
     /**
-     * Creates the requested browser driver.
-     *
-     * <p>Browser-specific construction stays centralized here so future
-     * capabilities can be added without changing test classes.</p>
+     * Creates the requested browser. Browser identity is kept separate from
+     * runtime options such as headless mode and certificate handling.
      */
     private static WebDriver createDriver(BrowserType browserType) {
         return switch (browserType) {
-            case CHROME -> new ChromeDriver();
-
-            case CHROME_HEADLESS -> new ChromeDriver(
-                    new ChromeOptions()
-                            .addArguments("--headless=new"));
-
-            case FIREFOX -> new FirefoxDriver();
-
-            case FIREFOX_HEADLESS -> new FirefoxDriver(
-                    new FirefoxOptions()
-                            .addArguments("-headless"));
-
-            case EDGE -> new EdgeDriver();
-
+            case CHROME -> new ChromeDriver(createChromeOptions());
+            case FIREFOX -> new FirefoxDriver(createFirefoxOptions());
+            case EDGE -> new EdgeDriver(createEdgeOptions());
             case SAFARI -> new SafariDriver();
         };
+    }
+
+    private static ChromeOptions createChromeOptions() {
+        ChromeOptions options = new ChromeOptions();
+
+        if (AppConfig.HEADLESS) {
+            options.addArguments("--headless=new");
+        }
+
+        options.setAcceptInsecureCerts(AppConfig.ACCEPT_INSECURE_CERTS);
+        return options;
+    }
+
+    private static FirefoxOptions createFirefoxOptions() {
+        FirefoxOptions options = new FirefoxOptions();
+
+        if (AppConfig.HEADLESS) {
+            options.addArguments("-headless");
+        }
+
+        options.setAcceptInsecureCerts(AppConfig.ACCEPT_INSECURE_CERTS);
+        return options;
+    }
+
+    private static EdgeOptions createEdgeOptions() {
+        EdgeOptions options = new EdgeOptions();
+
+        if (AppConfig.HEADLESS) {
+            options.addArguments("--headless=new");
+        }
+
+        options.setAcceptInsecureCerts(AppConfig.ACCEPT_INSECURE_CERTS);
+        return options;
     }
 
     /**
      * Verifies whether the current test thread is using the requested
      * browser implementation.
-     *
-     * @param browserName expected browser name
-     * @return {@code true} when the current WebDriver matches the requested
-     *         browser; otherwise {@code false}
      */
     public static boolean isDriverInstanceOf(String browserName) {
         WebDriver driver = getDriver();
@@ -125,8 +130,8 @@ public final class DriverManager {
         }
 
         return switch (browserType) {
-            case CHROME, CHROME_HEADLESS -> driver instanceof ChromeDriver;
-            case FIREFOX, FIREFOX_HEADLESS -> driver instanceof FirefoxDriver;
+            case CHROME -> driver instanceof ChromeDriver;
+            case FIREFOX -> driver instanceof FirefoxDriver;
             case EDGE -> driver instanceof EdgeDriver;
             case SAFARI -> driver instanceof SafariDriver;
         };
