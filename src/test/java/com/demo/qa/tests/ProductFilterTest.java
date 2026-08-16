@@ -2,6 +2,7 @@ package com.demo.qa.tests;
 
 import com.demo.qa.core.AppConfig;
 import com.demo.qa.core.BaseTest;
+import com.demo.qa.core.ObjectRepo;
 import com.demo.qa.utilities.JsonFileReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -17,30 +18,32 @@ import java.util.Map;
 
 public class ProductFilterTest extends BaseTest {
 
-	@Test(dataProvider = "filterData", description = "Verify perfume filter")
-	public void filter_test(Map<String, String> testDataMap) {
-		p.getHomePage().verifyHomepageLoaded();
-		p.getHomePage().navigateToPerfumePage();
-		p.getPerfumePage().applyFilter(testDataMap);
-		p.getPerfumePage().fetchListing();
-	}
+    private final ObjectRepo objectRepo = ObjectRepo.getInstance();
 
-	@DataProvider
-	public Object[][] filterData() throws Exception {
-		JSONArray jsonArray = JsonFileReader.readJson(AppConfig.TEST_RESOURCE_PATH + "/filter.json"
-				, "Criteria");
-		Object[][] dataObj = new Object[jsonArray.size()][1];
+    @Test(dataProvider = "filterData", description = "Verify perfume filter")
+    public void filter_test(Map<String, String> testDataMap) {
+        objectRepo.getHomePage().verifyHomepageLoaded();
+        objectRepo.getHomePage().navigateToPerfumePage();
+        objectRepo.getPerfumePage().applyFilter(testDataMap);
+        objectRepo.getPerfumePage().fetchListing();
+    }
 
-		for (int i = 0; i < jsonArray.size(); i++) {
-			Map<String, String> map = new HashMap<>();
-			JSONObject jsonObject = (JSONObject) jsonArray.get(i);
-			for(Object key : jsonObject.keySet()){
-				map.put((String)key, (String)jsonObject.get(key));
-			}
-			dataObj[i][0] = map;
-		}
+    @DataProvider
+    public Object[][] filterData() throws Exception {
+        JSONArray jsonArray = JsonFileReader.readJson(AppConfig.TEST_RESOURCE_PATH + "/filter.json"
+                , "Criteria");
+        Object[][] dataObj = new Object[jsonArray.size()][1];
 
-		System.out.println(Arrays.toString(dataObj));
-		return dataObj;
-	}
+        for (int i = 0; i < jsonArray.size(); i++) {
+            Map<String, String> map = new HashMap<>();
+            JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+            for (Object key : jsonObject.keySet()) {
+                map.put((String) key, (String) jsonObject.get(key));
+            }
+            dataObj[i][0] = map;
+        }
+
+        System.out.println(Arrays.toString(dataObj));
+        return dataObj;
+    }
 }
