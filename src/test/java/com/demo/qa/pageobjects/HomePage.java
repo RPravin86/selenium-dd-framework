@@ -21,11 +21,11 @@ public class HomePage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    public By logo = By.cssSelector("div.logo");
-    public By perfumeMenu = By.xpath("//li[@data-uid='FragrancesNavNode_DE']//a");
-    public By shadowHostCookie = By.cssSelector("#usercentrics-root");
-    public By acceptAllCookieButton = By.cssSelector("button[data-testid='uc-accept-all-button']");
-    public By leftContents = By.xpath("//div[contains(@class, 'left-content-slot')]");
+    private final By logo = By.cssSelector("div.logo");
+    private final By perfumeMenu = By.xpath("//li[@data-uid='FragrancesNavNode_DE']//a");
+    private final By shadowHostCookie = By.cssSelector("#usercentrics-root");
+    private final By acceptAllCookieButton = By.cssSelector("button[data-testid='uc-accept-all-button']");
+    private final By leftContents = By.xpath("//div[contains(@class, 'left-content-slot')]");
 
     public HomePage(WebDriver driver) {
         this.driver = driver;
