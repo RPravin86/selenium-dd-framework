@@ -4,26 +4,53 @@ import com.demo.qa.pageobjects.HomePage;
 import com.demo.qa.pageobjects.PerfumePage;
 
 public final class ObjectRepo {
-    private static final ThreadLocal<ObjectRepo> threadInstance = new ThreadLocal<>();
-    HomePage homePage;
-    PerfumePage perfumePage;
 
-    private ObjectRepo(){
+    /**
+     * Keeps the page-object repository isolated per test-execution thread so
+     * parallel TestNG methods do not share mutable page-object state.
+     */
+    private static final ThreadLocal<ObjectRepo> THREAD_INSTANCE = new ThreadLocal<>();
 
+    private HomePage homePage;
+    private PerfumePage perfumePage;
+
+    private ObjectRepo() {
+        // Prevent direct instantiation; instances are managed per execution thread.
     }
 
-    public static ObjectRepo getInstance(){
-        if(threadInstance.get() == null){
-            threadInstance.set(new ObjectRepo());
+    /**
+     * Returns the ObjectRepo associated with the current execution thread.
+     *
+     * @return thread-local ObjectRepo instance
+     */
+    public static ObjectRepo getInstance() {
+        if (THREAD_INSTANCE.get() == null) {
+            THREAD_INSTANCE.set(new ObjectRepo());
         }
-        return threadInstance.get();
+        return THREAD_INSTANCE.get();
     }
 
-    public HomePage getHomePage(){
-        return (homePage == null) ? new HomePage(DriverManager.getDriver()) : homePage;
-    }
-    public PerfumePage getPerfumePage(){
-        return (perfumePage == null) ? new PerfumePage(DriverManager.getDriver()) : perfumePage;
+    /**
+     * Lazily creates the HomePage using the WebDriver assigned to the current thread.
+     *
+     * @return current thread's HomePage instance
+     */
+    public HomePage getHomePage() {
+        if (homePage == null) {
+            homePage = new HomePage(DriverManager.getDriver());
+        }
+        return homePage;
     }
 
+    /**
+     * Lazily creates the PerfumePage using the WebDriver assigned to the current thread.
+     *
+     * @return current thread's PerfumePage instance
+     */
+    public PerfumePage getPerfumePage() {
+        if (perfumePage == null) {
+            perfumePage = new PerfumePage(DriverManager.getDriver());
+        }
+        return perfumePage;
+    }
 }
