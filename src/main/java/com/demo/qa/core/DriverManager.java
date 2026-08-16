@@ -11,7 +11,6 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 
 import java.time.Duration;
-import java.util.Locale;
 
 /**
  * Manages the WebDriver lifecycle for parallel TestNG execution.
@@ -36,10 +35,6 @@ public final class DriverManager {
      */
     private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(60);
 
-    /**
-     * Private constructor prevents accidental instantiation of this
-     * utility-style class.
-     */
     private DriverManager() {
         // Prevent external instantiation.
     }
@@ -57,27 +52,17 @@ public final class DriverManager {
     /**
      * Creates and configures a WebDriver for the current test thread.
      *
-     * <p>If a driver already exists for the current thread, it is safely
-     * terminated before a new session is created. This prevents stale
-     * browser sessions from being reused accidentally.</p>
-     *
-     * @param browserName browser to initialize:
-     *                    chrome, chrome-headless, firefox,
-     *                    firefox-headless, edge, or safari
-     * @throws IllegalArgumentException when the browser name is null,
-     *                                  blank, or unsupported
+     * @param browserName browser configured through TestNG or properties
+     * @throws IllegalArgumentException when the browser name is invalid
      */
     public static void initialize(String browserName) {
-        if (browserName == null || browserName.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Browser name must not be null or blank");
-        }
+        BrowserType browserType = BrowserType.from(browserName);
 
         if (DRIVER.get() != null) {
             quit();
         }
 
-        WebDriver driver = createDriver(browserName);
+        WebDriver driver = createDriver(browserType);
         DRIVER.set(driver);
 
         driver.manage().window().maximize();
@@ -86,7 +71,7 @@ public final class DriverManager {
 
         LOG.info(
                 "WebDriver initialized: browser={}, thread={}",
-                browserName,
+                browserType,
                 Thread.currentThread().getId()
         );
     }
@@ -94,48 +79,32 @@ public final class DriverManager {
     /**
      * Creates the requested browser driver.
      *
-     * <p>Keeping browser creation in one place makes it easier to extend
-     * the framework with additional browser-specific capabilities without
-     * changing the test classes.</p>
-     *
-     * @param browserName requested browser name
-     * @return initialized WebDriver instance
-     * @throws IllegalArgumentException when the browser is unsupported
+     * <p>Browser-specific construction stays centralized here so future
+     * capabilities can be added without changing test classes.</p>
      */
-    private static WebDriver createDriver(String browserName) {
-        String browser = browserName.trim().toLowerCase(Locale.ROOT);
+    private static WebDriver createDriver(BrowserType browserType) {
+        return switch (browserType) {
+            case CHROME -> new ChromeDriver();
 
-        return switch (browser) {
-            case "chrome" -> new ChromeDriver();
-
-            case "chrome-headless" -> new ChromeDriver(
+            case CHROME_HEADLESS -> new ChromeDriver(
                     new ChromeOptions()
                             .addArguments("--headless=new"));
 
-            case "firefox" -> new FirefoxDriver();
+            case FIREFOX -> new FirefoxDriver();
 
-            case "firefox-headless" -> new FirefoxDriver(
+            case FIREFOX_HEADLESS -> new FirefoxDriver(
                     new FirefoxOptions()
                             .addArguments("-headless"));
 
-            case "edge" -> new EdgeDriver();
+            case EDGE -> new EdgeDriver();
 
-            case "safari" -> new SafariDriver();
-
-            default -> throw new IllegalArgumentException(
-                    "Unsupported browser: " + browserName
-                            + ". Supported browsers: chrome, chrome-headless, "
-                            + "firefox, firefox-headless, edge, safari"
-            );
+            case SAFARI -> new SafariDriver();
         };
     }
 
     /**
      * Verifies whether the current test thread is using the requested
      * browser implementation.
-     *
-     * <p>This helper can be used by framework-level validation or diagnostics
-     * without exposing browser-specific implementation details to tests.</p>
      *
      * @param browserName expected browser name
      * @return {@code true} when the current WebDriver matches the requested
@@ -144,36 +113,28 @@ public final class DriverManager {
     public static boolean isDriverInstanceOf(String browserName) {
         WebDriver driver = getDriver();
 
-        if (driver == null || browserName == null) {
+        if (driver == null || browserName == null || browserName.isBlank()) {
             return false;
         }
 
-        String browser = browserName.trim().toLowerCase(Locale.ROOT);
+        BrowserType browserType;
+        try {
+            browserType = BrowserType.from(browserName);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
 
-        return switch (browser) {
-            case "chrome", "chrome-headless" ->
-                    driver instanceof ChromeDriver;
-
-            case "firefox", "firefox-headless" ->
-                    driver instanceof FirefoxDriver;
-
-            case "edge" ->
-                    driver instanceof EdgeDriver;
-
-            case "safari" ->
-                    driver instanceof SafariDriver;
-
-            default -> false;
+        return switch (browserType) {
+            case CHROME, CHROME_HEADLESS -> driver instanceof ChromeDriver;
+            case FIREFOX, FIREFOX_HEADLESS -> driver instanceof FirefoxDriver;
+            case EDGE -> driver instanceof EdgeDriver;
+            case SAFARI -> driver instanceof SafariDriver;
         };
     }
 
     /**
      * Terminates the current WebDriver session and removes the driver
      * reference from the current thread.
-     *
-     * <p>{@link ThreadLocal#remove()} is important after the browser session
-     * ends because it prevents the WebDriver reference from remaining
-     * associated with a reusable TestNG worker thread.</p>
      */
     public static void quit() {
         WebDriver driver = DRIVER.get();
