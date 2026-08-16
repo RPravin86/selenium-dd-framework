@@ -55,29 +55,26 @@ public class JsonFileReader {
      * TestNG-compatible two-dimensional object array.
      *
      * @param filePath path of the JSON file
-     * @return two-dimensional object array, or null when the JSON cannot be read
+     * @return two-dimensional object array
+     * @throws IOException if the file cannot be read, parsed, or contains
+     *                     an invalid JSON array structure
      */
-    public static Object[][] readJSONAs2DArray(String filePath) {
-        try {
-            JsonNode rootNode = OBJECT_MAPPER.readTree(new File(filePath));
+    public static Object[][] readJSONAs2DArray(String filePath) throws IOException {
+        JsonNode rootNode = OBJECT_MAPPER.readTree(new File(filePath));
 
-            if (!rootNode.isArray()) {
-                System.err.println("Error: Root object is not a JSONArray.");
-                return null;
-            }
-
-            Object[][] array = new Object[rootNode.size()][];
-            for (int i = 0; i < rootNode.size(); i++) {
-                JsonNode rowNode = rootNode.get(i);
-                if (!rowNode.isArray()) {
-                    System.err.println("Error: JSON row at index " + i + " is not an array.");
-                    return null;
-                }
-                array[i] = OBJECT_MAPPER.convertValue(rowNode, Object[].class);
-            }
-            return array;
-        } catch (IOException e) {
-            return null;
+        if (!rootNode.isArray()) {
+            throw new IOException("Expected JSON root to be an array: " + filePath);
         }
+
+        Object[][] array = new Object[rootNode.size()][];
+        for (int i = 0; i < rootNode.size(); i++) {
+            JsonNode rowNode = rootNode.get(i);
+            if (!rowNode.isArray()) {
+                throw new IOException(
+                        "Expected JSON row at index " + i + " to be an array: " + filePath);
+            }
+            array[i] = OBJECT_MAPPER.convertValue(rowNode, Object[].class);
+        }
+        return array;
     }
 }
