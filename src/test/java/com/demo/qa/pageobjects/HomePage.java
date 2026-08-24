@@ -2,18 +2,21 @@ package com.demo.qa.pageobjects;
 
 import com.aventstack.extentreports.Status;
 import com.demo.qa.core.AppConfig;
-import com.demo.qa.core.DriverManager;
 import com.demo.qa.reportmanager.Report;
 import org.openqa.selenium.By;
-import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
 import java.time.Duration;
 
+/**
+ * Page Object representing the Automation Exercise home page.
+ *
+ * <p>The page exposes only high-level user actions and validations so
+ * test classes remain independent from Selenium locator details.</p>
+ */
 public class HomePage {
 
     private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(20);
@@ -21,11 +24,20 @@ public class HomePage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    private final By logo = By.cssSelector("div.logo");
-    private final By perfumeMenu = By.xpath("//li[@data-uid='FragrancesNavNode_DE']//a");
-    private final By shadowHostCookie = By.cssSelector("#usercentrics-root");
-    private final By acceptAllCookieButton = By.cssSelector("button[data-testid='uc-accept-all-button']");
-    private final By leftContents = By.xpath("//div[contains(@class, 'left-content-slot')]");
+    private final By homeMenu =
+            By.cssSelector("a[href='/']");
+
+    private final By productsMenu =
+            By.cssSelector("a[href='/products']");
+
+    private final By cartMenu =
+            By.cssSelector("a[href='/view_cart']");
+
+    private final By signupLoginMenu =
+            By.cssSelector("a[href='/login']");
+
+    private final By automationExerciseLogo =
+            By.cssSelector(".logo.pull-left img");
 
     public HomePage(WebDriver driver) {
         this.driver = driver;
@@ -33,25 +45,89 @@ public class HomePage {
     }
 
     /**
-     * Verifies that the home page is loaded and handles the cookie consent dialog
-     * when it is supported by the current browser.
+     * Verifies that the Automation Exercise home page loaded successfully.
      */
     public void verifyHomepageLoaded() {
-        Assert.assertEquals(driver.getCurrentUrl(), AppConfig.BASE_URL);
-        Report.log(Status.PASS, "Url: " + driver.getCurrentUrl());
-        Assert.assertTrue(driver.findElement(logo).isDisplayed(), "Logo not displayed");
-        Report.log(Status.PASS, "Home page loaded");
-        if (!DriverManager.isDriverInstanceOf("safari")) {
-            WebElement shadowHost = driver.findElement(shadowHostCookie);
-            SearchContext shadowRoot = shadowHost.getShadowRoot();
-            shadowRoot.findElement(acceptAllCookieButton).click();
-            Report.log(Status.PASS, "Accepted all Cookies");
-        }
+
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        automationExerciseLogo
+                )
+        );
+
+        Assert.assertTrue(
+                driver.getCurrentUrl().startsWith(AppConfig.BASE_URL),
+                "Unexpected application URL: " + driver.getCurrentUrl()
+        );
+
+        Assert.assertTrue(
+                driver.findElement(automationExerciseLogo).isDisplayed(),
+                "Automation Exercise logo is not displayed"
+        );
+
+        Report.log(
+                Status.PASS,
+                "Automation Exercise home page loaded successfully"
+        );
     }
 
-    public void navigateToPerfumePage() {
-        driver.findElement(perfumeMenu).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(leftContents));
-        Report.log(Status.PASS, "Navigated to the Perfume page");
+    /**
+     * Navigates from the home page to the products catalogue.
+     */
+    public void navigateToProductsPage() {
+
+        wait.until(
+                ExpectedConditions.elementToBeClickable(productsMenu)
+        ).click();
+
+        wait.until(
+                ExpectedConditions.urlContains("/products")
+        );
+
+        Report.log(
+                Status.PASS,
+                "Navigated to Products page"
+        );
+    }
+
+    /**
+     * Navigates to the shopping cart.
+     */
+    public void navigateToCartPage() {
+
+        wait.until(
+                ExpectedConditions.elementToBeClickable(cartMenu)
+        ).click();
+
+        wait.until(
+                ExpectedConditions.urlContains("/view_cart")
+        );
+
+        Report.log(
+                Status.PASS,
+                "Navigated to Cart page"
+        );
+    }
+
+    /**
+     * Navigates to the login/sign-up page.
+     *
+     * <p>This method is available for future authentication scenarios
+     * even though login tests are not part of the first migration phase.</p>
+     */
+    public void navigateToLoginPage() {
+
+        wait.until(
+                ExpectedConditions.elementToBeClickable(signupLoginMenu)
+        ).click();
+
+        wait.until(
+                ExpectedConditions.urlContains("/login")
+        );
+
+        Report.log(
+                Status.PASS,
+                "Navigated to Login page"
+        );
     }
 }
