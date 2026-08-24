@@ -1,7 +1,7 @@
 package com.demo.qa.core;
 
 import com.demo.qa.pageobjects.HomePage;
-import com.demo.qa.pageobjects.PerfumePage;
+import com.demo.qa.pageobjects.ProductsPage;
 
 public final class ObjectRepo {
 
@@ -12,7 +12,7 @@ public final class ObjectRepo {
     private static final ThreadLocal<ObjectRepo> THREAD_INSTANCE = new ThreadLocal<>();
 
     private HomePage homePage;
-    private PerfumePage perfumePage;
+    private ProductsPage productsPage;
 
     private ObjectRepo() {
         // Prevent direct instantiation; instances are managed per execution thread.
@@ -43,14 +43,14 @@ public final class ObjectRepo {
     }
 
     /**
-     * Lazily creates the PerfumePage using the WebDriver assigned to the current thread.
+     * Lazily creates the ProductsPage using the WebDriver assigned to the current thread.
      *
-     * @return current thread's PerfumePage instance
+     * @return current thread's ProductsPage instance
      */
-    public PerfumePage getPerfumePage() {
-        if (perfumePage == null) {
-            perfumePage = new PerfumePage(DriverManager.getDriver());
+    public ProductsPage getProductsPage() {
+        if (productsPage == null) {
+            productsPage = new ProductsPage(DriverManager.getDriver());
         }
-        return perfumePage;
+        return productsPage;
     }
 }
