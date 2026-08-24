@@ -1,6 +1,7 @@
 package com.demo.qa.core;
 
 import com.demo.qa.pageobjects.HomePage;
+import com.demo.qa.pageobjects.ProductDetailsPage;
 import com.demo.qa.pageobjects.ProductsPage;
 
 public final class ObjectRepo {
@@ -13,6 +14,7 @@ public final class ObjectRepo {
 
     private HomePage homePage;
     private ProductsPage productsPage;
+    private ProductDetailsPage productDetailsPage;
 
     private ObjectRepo() {
         // Prevent direct instantiation; instances are managed per execution thread.
@@ -62,5 +64,18 @@ public final class ObjectRepo {
             productsPage = new ProductsPage(DriverManager.getDriver());
         }
         return productsPage;
+    }
+
+    /**
+     * Lazily creates the ProductDetailsPage using the WebDriver assigned
+     * to the current thread.
+     *
+     * @return current thread's ProductDetailsPage instance
+     */
+    public ProductDetailsPage getProductDetailsPage() {
+        if (productDetailsPage == null) {
+            productDetailsPage = new ProductDetailsPage(DriverManager.getDriver());
+        }
+        return productDetailsPage;
     }
 }
