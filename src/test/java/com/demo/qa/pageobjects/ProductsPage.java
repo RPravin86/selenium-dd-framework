@@ -91,18 +91,37 @@ public class ProductsPage {
 
         List<String> actualProductNames = products.stream()
                 .map(WebElement::getText)
-                .map(String::trim)
+                .map(this::normalizeText)
                 .toList();
 
+        String normalizedExpectedProduct = normalizeText(expectedProduct);
+
         boolean productFound = actualProductNames.stream()
-                .anyMatch(product -> product.equalsIgnoreCase(expectedProduct));
+                .anyMatch(product ->
+                        product.equalsIgnoreCase(normalizedExpectedProduct));
 
         Assert.assertTrue(
                 productFound,
-                "Expected product '" + expectedProduct
+                "Expected product '" + normalizedExpectedProduct
                         + "' was not found. Actual products: " + actualProductNames
         );
 
-        Report.log(Status.PASS, "Expected product found: " + expectedProduct);
+        Report.log(
+                Status.PASS,
+                "Expected product found: " + normalizedExpectedProduct
+        );
+    }
+
+    /**
+     * Normalizes UI text so harmless differences in whitespace do not
+     * cause product-name validations to fail.
+     *
+     * @param text text to normalize
+     * @return trimmed text with consecutive whitespace collapsed to one space
+     */
+    private String normalizeText(String text) {
+        return text
+                .trim()
+                .replaceAll("\\s+", " ");
     }
 }
