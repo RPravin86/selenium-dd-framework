@@ -39,11 +39,15 @@ public class ProductSearchTest extends BaseTest {
     }
 
     /**
-     * Supplies JSON-based product search data to the test.
+     * Supplies JSON-based product search data to the test and allows
+     * independent datasets to execute concurrently.
      *
      * @return TestNG data-provider dataset
      */
-    @DataProvider(name = "productSearchData")
+    @DataProvider(
+            name = "productSearchData",
+            parallel = true
+    )
     public Object[][] productSearchData() throws Exception {
         List<Map<String, String>> searchData = JsonFileReader.readJson(
                 AppConfig.TEST_RESOURCE_PATH + "/product-search.json",
