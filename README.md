@@ -1,6 +1,25 @@
 # Selenium Data-Driven Automation Framework
 
-> Enterprise-style UI test automation framework built with Java 17, Selenium 4 and TestNG, designed for maintainability, scalability and parallel execution.
+> Production-oriented UI test automation framework built with Java 17, Selenium 4 and TestNG, designed for maintainability, scalability and parallel execution.
+
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Selenium](https://img.shields.io/badge/Selenium-4-green)
+![TestNG](https://img.shields.io/badge/TestNG-7.12-orange)
+![Maven](https://img.shields.io/badge/Maven-Build-red)
+![Jackson](https://img.shields.io/badge/Jackson-2.21.5-blue)
+
+## ⭐ Project Highlights
+
+- **Thread-safe WebDriver management** using `ThreadLocal<WebDriver>`
+- **Cross-browser execution** across Chrome, Firefox, Edge and Safari
+- **Configuration-driven execution** for headless mode and insecure certificates
+- **Page Object Model** for maintainable and reusable UI automation
+- **JSON data-driven testing** using Jackson and TestNG `DataProvider`
+- **Explicit-wait synchronization** without dependency on implicit waits
+- **ExtentReports + Log4j2** integration for reporting and diagnostics
+- **Modern Java 17 + Selenium 4 architecture** using Selenium Manager
+
+---
 
 ## 🚀 Overview
 
