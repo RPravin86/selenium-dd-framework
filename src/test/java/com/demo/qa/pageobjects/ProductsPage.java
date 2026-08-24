@@ -16,7 +16,7 @@ import java.util.List;
  * Page Object representing the Automation Exercise products page.
  *
  * <p>Encapsulates product catalogue interactions such as searching
- * for products and validating search results.</p>
+ * for products, validating search results, and opening product details.</p>
  */
 public class ProductsPage {
 
@@ -35,6 +35,9 @@ public class ProductsPage {
             By.xpath("//h2[contains(@class,'title') and contains(text(),'Searched Products')]");
 
     private final By productNames = By.cssSelector(".productinfo p");
+
+    private final By firstProductViewLink =
+            By.cssSelector("a[href='/product_details/1']");
 
     public ProductsPage(WebDriver driver) {
         this.driver = driver;
@@ -110,6 +113,19 @@ public class ProductsPage {
                 Status.PASS,
                 "Expected product found: " + normalizedExpectedProduct
         );
+    }
+
+    /**
+     * Opens the details page for the first product in the catalogue.
+     */
+    public void openFirstProductDetails() {
+        wait.until(
+                ExpectedConditions.elementToBeClickable(firstProductViewLink)
+        ).click();
+
+        wait.until(ExpectedConditions.urlContains("/product_details/"));
+
+        Report.log(Status.INFO, "Opened first product details page");
     }
 
     /**
