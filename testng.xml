@@ -13,6 +13,7 @@
     <test name="Product Tests">
         <classes>
             <class name="com.demo.qa.tests.ProductSearchTest"/>
+            <class name="com.demo.qa.tests.ProductDetailsTest"/>
         </classes>
     </test>
 
