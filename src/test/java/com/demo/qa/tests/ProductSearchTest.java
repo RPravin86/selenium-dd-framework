@@ -15,8 +15,6 @@ import java.util.Map;
  */
 public class ProductSearchTest extends BaseTest {
 
-    private final ObjectRepo objectRepo = ObjectRepo.getInstance();
-
     /**
      * Verifies that products can be searched and that the expected
      * product appears in the search results.
@@ -28,6 +26,8 @@ public class ProductSearchTest extends BaseTest {
             description = "Verify product search results"
     )
     public void verifyProductSearch(Map<String, String> testDataMap) {
+        ObjectRepo objectRepo = ObjectRepo.getInstance();
+
         String searchTerm = testDataMap.get("searchTerm");
         String expectedProduct = testDataMap.get("expectedProduct");
 
