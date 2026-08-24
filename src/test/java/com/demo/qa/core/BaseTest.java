@@ -38,13 +38,20 @@ public abstract class BaseTest {
     }
 
     /**
-     * Terminates the WebDriver session after each test method.
+     * Terminates the WebDriver session and clears cached page objects
+     * after each test method.
      *
-     * <p>{@code alwaysRun = true} ensures that browser cleanup is
-     * attempted even when the test method fails.</p>
+     * <p>{@code alwaysRun = true} ensures cleanup is attempted even when
+     * the test method fails. The ObjectRepo is removed in a {@code finally}
+     * block so stale page objects cannot remain associated with a reusable
+     * TestNG worker thread.</p>
      */
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        DriverManager.quit();
+        try {
+            DriverManager.quit();
+        } finally {
+            ObjectRepo.remove();
+        }
     }
 }
