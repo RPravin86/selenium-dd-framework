@@ -1,0 +1,12 @@
+{
+  "SearchData": [
+    {
+      "searchTerm": "top",
+      "expectedProduct": "Blue Top"
+    },
+    {
+      "searchTerm": "jeans",
+      "expectedProduct": "Soft Stretch Jeans"
+    }
+  ]
+}
