@@ -31,6 +31,16 @@ public final class ObjectRepo {
     }
 
     /**
+     * Removes the ObjectRepo associated with the current execution thread.
+     *
+     * <p>This prevents page objects holding references to terminated
+     * WebDriver sessions from being reused by TestNG worker threads.</p>
+     */
+    public static void remove() {
+        THREAD_INSTANCE.remove();
+    }
+
+    /**
      * Lazily creates the HomePage using the WebDriver assigned to the current thread.
      *
      * @return current thread's HomePage instance
