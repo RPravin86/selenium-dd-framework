@@ -67,7 +67,8 @@ public final class DriverManager {
 
     /**
      * Creates the requested browser. Browser identity is kept separate from
-     * runtime options such as headless mode and certificate handling.
+     * runtime options such as headless mode, certificate handling, and
+     * page-load strategy.
      */
     private static WebDriver createDriver(BrowserType browserType) {
         return switch (browserType) {
@@ -86,6 +87,7 @@ public final class DriverManager {
         }
 
         options.setAcceptInsecureCerts(AppConfig.ACCEPT_INSECURE_CERTS);
+        options.setPageLoadStrategy(AppConfig.PAGE_LOAD_STRATEGY);
         return options;
     }
 
@@ -97,6 +99,7 @@ public final class DriverManager {
         }
 
         options.setAcceptInsecureCerts(AppConfig.ACCEPT_INSECURE_CERTS);
+        options.setPageLoadStrategy(AppConfig.PAGE_LOAD_STRATEGY);
         return options;
     }
 
@@ -108,6 +111,7 @@ public final class DriverManager {
         }
 
         options.setAcceptInsecureCerts(AppConfig.ACCEPT_INSECURE_CERTS);
+        options.setPageLoadStrategy(AppConfig.PAGE_LOAD_STRATEGY);
         return options;
     }
 
