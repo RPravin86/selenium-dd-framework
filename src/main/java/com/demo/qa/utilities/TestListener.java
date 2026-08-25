@@ -1,8 +1,10 @@
 package com.demo.qa.utilities;
 
 import com.aventstack.extentreports.Status;
+import com.demo.qa.core.AppConfig;
 import com.demo.qa.core.DriverManager;
 import com.demo.qa.reportmanager.Report;
+import com.demo.qa.reportmanager.ReportPathManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.OutputType;
@@ -22,18 +24,14 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * TestNG listener responsible for test lifecycle logging, reporting,
- * and failure screenshots.
- *
- * <p>The listener integrates TestNG execution events with the framework
- * reporting layer and captures a screenshot when a failed test has a
- * screenshot-capable WebDriver.</p>
+ * and configurable failure screenshots.
  */
 public final class TestListener implements ITestListener {
 
     private static final Logger LOG = LogManager.getLogger(TestListener.class);
 
     private static final DateTimeFormatter SCREENSHOT_TIMESTAMP =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss-SSS");
 
     @Override
     public void onTestStart(ITestResult result) {
@@ -53,43 +51,74 @@ public final class TestListener implements ITestListener {
     public void onTestFailure(ITestResult result) {
         LOG.error("Test Failed: {}", result.getName(), result.getThrowable());
 
+        Report.log(
+                Status.FAIL,
+                "\tTest Failed " + result.getThrowable(),
+                result.getName());
+
+        WebDriver driver = DriverManager.getDriver();
+
+        if (!(driver instanceof TakesScreenshot screenshotDriver)) {
+            LOG.warn("Screenshot unavailable for failed test: {}", result.getName());
+            return;
+        }
+
         try {
-            WebDriver driver = DriverManager.getDriver();
-
-            if (driver instanceof TakesScreenshot screenshotDriver) {
-                String timestamp = LocalDateTime.now().format(SCREENSHOT_TIMESTAMP);
-                Path destination = Path.of(
-                        System.getProperty("user.dir"),
-                        "screenshots",
-                        result.getName() + "_" + timestamp + ".png");
-
-                Files.createDirectories(destination.getParent());
-
-                File source = screenshotDriver.getScreenshotAs(OutputType.FILE);
-                Files.copy(
-                        source.toPath(),
-                        destination,
-                        StandardCopyOption.REPLACE_EXISTING);
-
-                Report.log(
-                        Status.FAIL,
-                        "\tTest Failed " + result.getThrowable(),
-                        result.getName());
-                Report.getTest().addScreenCaptureFromPath(destination.toString());
-            } else {
-                LOG.warn("Screenshot unavailable for failed test: {}", result.getName());
-                Report.log(
-                        Status.FAIL,
-                        "\tTest Failed " + result.getThrowable(),
-                        result.getName());
+            switch (AppConfig.SCREENSHOT_MODE) {
+                case BASE64 -> captureBase64Screenshot(screenshotDriver);
+                case FILE -> captureFileScreenshot(screenshotDriver, result);
             }
         } catch (IOException e) {
-            LOG.error("Unable to save screenshot for failed test: {}", result.getName(), e);
-            Report.log(
-                    Status.FAIL,
-                    "\tTest Failed " + result.getThrowable(),
-                    result.getName());
+            LOG.error(
+                    "Unable to save screenshot for failed test: {}",
+                    result.getName(),
+                    e);
         }
+    }
+
+    private void captureBase64Screenshot(TakesScreenshot screenshotDriver) {
+        String base64Screenshot =
+                screenshotDriver.getScreenshotAs(OutputType.BASE64);
+
+        Report.getTest().addScreenCaptureFromBase64String(
+                base64Screenshot,
+                "Failure Screenshot");
+    }
+
+    private void captureFileScreenshot(
+            TakesScreenshot screenshotDriver,
+            ITestResult result) throws IOException {
+
+        String timestamp =
+                LocalDateTime.now().format(SCREENSHOT_TIMESTAMP);
+
+        String screenshotName =
+                result.getName()
+                        + "_thread-"
+                        + Thread.currentThread().getId()
+                        + "_"
+                        + timestamp
+                        + ".png";
+
+        Path screenshotDirectory =
+                ReportPathManager.getScreenshotDirectory();
+
+        Files.createDirectories(screenshotDirectory);
+
+        Path destination =
+                screenshotDirectory.resolve(screenshotName);
+
+        File source =
+                screenshotDriver.getScreenshotAs(OutputType.FILE);
+
+        Files.copy(
+                source.toPath(),
+                destination,
+                StandardCopyOption.REPLACE_EXISTING);
+
+        Report.getTest().addScreenCaptureFromPath(
+                "screenshots/" + screenshotName,
+                "Failure Screenshot");
     }
 
     @Override
@@ -101,10 +130,6 @@ public final class TestListener implements ITestListener {
                 result.getName());
     }
 
-    /**
-     * Intentionally unused because the framework does not configure
-     * TestNG success-percentage based test execution.
-     */
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
         // Intentionally not handled.
