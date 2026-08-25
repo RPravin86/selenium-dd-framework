@@ -44,25 +44,22 @@ public final class AppConfig {
     public static final PageLoadStrategy PAGE_LOAD_STRATEGY =
             getPageLoadStrategy("pageLoadStrategy");
 
+    /** Screenshot capture mode used for failed tests. */
+    public static final ScreenshotMode SCREENSHOT_MODE =
+            ScreenshotMode.from(getRequiredProperty("screenshotMode"));
+
+    /** Root directory used for all generated report types. */
+    public static final String REPORT_ROOT =
+            getRequiredProperty("reportRoot");
+
     /** Title displayed in the test execution report. */
     public static final String REPORT_TITLE =
             getRequiredProperty("reportTitle");
-
-    /** Base path used for generated test reports. */
-    public static final String REPORT_PATH =
-            getRequiredProperty("reportPath");
 
     /** Location of JSON and other test-data resources. */
     public static final String TEST_RESOURCE_PATH =
             ROOT + "/src/test/resources/test-data";
 
-    /**
-     * Retrieves a mandatory string configuration property.
-     *
-     * @param propertyName name of the required property
-     * @return trimmed property value
-     * @throws IllegalStateException when the property is missing or blank
-     */
     private static String getRequiredProperty(String propertyName) {
         String value = CONFIG.getProperty(propertyName);
 
@@ -78,16 +75,6 @@ public final class AppConfig {
         return value.trim();
     }
 
-    /**
-     * Retrieves a mandatory boolean configuration property.
-     *
-     * <p>Only {@code true} or {@code false} are accepted so configuration
-     * mistakes fail fast instead of silently falling back to false.</p>
-     *
-     * @param propertyName name of the required boolean property
-     * @return parsed boolean value
-     * @throws IllegalStateException when the property is missing or invalid
-     */
     private static boolean getBooleanProperty(String propertyName) {
         String value = getRequiredProperty(propertyName);
 
@@ -102,13 +89,6 @@ public final class AppConfig {
         return Boolean.parseBoolean(value);
     }
 
-    /**
-     * Retrieves and validates the Selenium page-load strategy.
-     *
-     * @param propertyName name of the page-load strategy property
-     * @return configured Selenium PageLoadStrategy
-     * @throws IllegalStateException when the configured value is unsupported
-     */
     private static PageLoadStrategy getPageLoadStrategy(String propertyName) {
         String value = getRequiredProperty(propertyName);
 
@@ -124,7 +104,6 @@ public final class AppConfig {
         };
     }
 
-    /** Prevents accidental instantiation of the configuration class. */
     private AppConfig() {
         // Utility/configuration class - no instantiation.
     }
