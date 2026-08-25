@@ -2,6 +2,7 @@ package com.demo.qa.pageobjects;
 
 import com.aventstack.extentreports.Status;
 import com.demo.qa.reportmanager.Report;
+import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -22,8 +23,8 @@ public class ProductsPage {
 
     private static final Duration WAIT_TIMEOUT = Duration.ofSeconds(20);
 
-    private final WebDriver driver;
     private final WebDriverWait wait;
+    private final WebActions webActions;
 
     private final By productsHeading =
             By.xpath("//h2[contains(@class,'title') and contains(text(),'All Products')]");
@@ -40,17 +41,15 @@ public class ProductsPage {
             By.cssSelector("a[href='/product_details/1']");
 
     public ProductsPage(WebDriver driver) {
-        this.driver = driver;
         this.wait = new WebDriverWait(driver, WAIT_TIMEOUT);
+        this.webActions = new WebActions(driver);
     }
 
     /**
      * Verifies that the products catalogue has loaded successfully.
      */
     public void verifyProductsPageLoaded() {
-        WebElement heading = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(productsHeading)
-        );
+        WebElement heading = webActions.waitForVisible(productsHeading);
 
         Assert.assertTrue(
                 heading.isDisplayed(),
@@ -66,18 +65,9 @@ public class ProductsPage {
      * @param searchTerm product text to search
      */
     public void searchProduct(String searchTerm) {
-        WebElement searchBox = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(searchInput)
-        );
-
-        searchBox.clear();
-        searchBox.sendKeys(searchTerm);
-
-        wait.until(ExpectedConditions.elementToBeClickable(searchButton)).click();
-
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(searchedProductsHeading)
-        );
+        webActions.type(searchInput, searchTerm);
+        webActions.click(searchButton);
+        webActions.waitForVisible(searchedProductsHeading);
 
         Report.log(Status.INFO, "Product search performed for: " + searchTerm);
     }
@@ -119,11 +109,11 @@ public class ProductsPage {
      * Opens the details page for the first product in the catalogue.
      */
     public void openFirstProductDetails() {
-        wait.until(
-                ExpectedConditions.elementToBeClickable(firstProductViewLink)
-        ).click();
+        webActions.click(firstProductViewLink);
 
-        wait.until(ExpectedConditions.urlContains("/product_details/"));
+        wait.until(
+                ExpectedConditions.urlContains("/product_details/")
+        );
 
         Report.log(Status.INFO, "Opened first product details page");
     }
