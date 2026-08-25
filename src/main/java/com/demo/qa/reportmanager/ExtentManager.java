@@ -6,32 +6,50 @@ import com.aventstack.extentreports.reporter.configuration.ExtentSparkReporterCo
 import com.aventstack.extentreports.reporter.configuration.Theme;
 import com.demo.qa.core.AppConfig;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.IOException;
+import java.nio.file.Files;
 
-public class ExtentManager {
+/**
+ * Creates and configures the framework's Extent report instance.
+ */
+public final class ExtentManager {
 
     private static ExtentReports extentReport;
 
-    /**
-     * This is a static method that creates and configures ExtentReports object.
-     * This method sets the theme of the report to STANDARD and title to "Test Report".
-     *
-     * @return ExtentReports
-     */
-    public synchronized static ExtentReports getExtentReports() {
+    private ExtentManager() {
+        // Utility class - no instantiation.
+    }
+
+    public static synchronized ExtentReports getExtentReports() {
         if (extentReport == null) {
-            String date = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(new Date());
+            createExecutionDirectory();
+
             ExtentSparkReporter htmlReporter =
-                    new ExtentSparkReporter(AppConfig.REPORT_PATH + date);
+                    new ExtentSparkReporter(
+                            ReportPathManager.getExtentReportPath().toString());
+
             extentReport = new ExtentReports();
             extentReport.attachReporter(htmlReporter);
+
             htmlReporter.config(
                     ExtentSparkReporterConfig.builder()
                             .theme(Theme.STANDARD)
                             .documentTitle(AppConfig.REPORT_TITLE)
                             .build());
         }
+
         return extentReport;
+    }
+
+    private static void createExecutionDirectory() {
+        try {
+            Files.createDirectories(
+                    ReportPathManager.getExecutionDirectory());
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Unable to create report execution directory: "
+                            + ReportPathManager.getExecutionDirectory(),
+                    e);
+        }
     }
 }
