@@ -1,6 +1,7 @@
 package com.demo.qa.core;
 
 import com.demo.qa.utilities.PropertiesFileReader;
+import org.openqa.selenium.PageLoadStrategy;
 
 import java.util.Properties;
 
@@ -38,6 +39,10 @@ public final class AppConfig {
     /** Whether browser sessions should accept insecure TLS certificates. */
     public static final boolean ACCEPT_INSECURE_CERTS =
             getBooleanProperty("acceptInsecureCerts");
+
+    /** Browser page-load strategy used during navigation. */
+    public static final PageLoadStrategy PAGE_LOAD_STRATEGY =
+            getPageLoadStrategy("pageLoadStrategy");
 
     /** Title displayed in the test execution report. */
     public static final String REPORT_TITLE =
@@ -95,6 +100,28 @@ public final class AppConfig {
         }
 
         return Boolean.parseBoolean(value);
+    }
+
+    /**
+     * Retrieves and validates the Selenium page-load strategy.
+     *
+     * @param propertyName name of the page-load strategy property
+     * @return configured Selenium PageLoadStrategy
+     * @throws IllegalStateException when the configured value is unsupported
+     */
+    private static PageLoadStrategy getPageLoadStrategy(String propertyName) {
+        String value = getRequiredProperty(propertyName);
+
+        return switch (value.toLowerCase()) {
+            case "normal" -> PageLoadStrategy.NORMAL;
+            case "eager" -> PageLoadStrategy.EAGER;
+            case "none" -> PageLoadStrategy.NONE;
+            default -> throw new IllegalStateException(
+                    "Configuration property '"
+                            + propertyName
+                            + "' must be normal, eager, or none"
+            );
+        };
     }
 
     /** Prevents accidental instantiation of the configuration class. */
