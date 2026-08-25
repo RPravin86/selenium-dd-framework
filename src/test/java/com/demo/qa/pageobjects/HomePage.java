@@ -3,6 +3,7 @@ package com.demo.qa.pageobjects;
 import com.aventstack.extentreports.Status;
 import com.demo.qa.core.AppConfig;
 import com.demo.qa.reportmanager.Report;
+import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -23,9 +24,7 @@ public class HomePage {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
-
-    private final By homeMenu =
-            By.cssSelector("a[href='/']");
+    private final WebActions webActions;
 
     private final By productsMenu =
             By.cssSelector("a[href='/products']");
@@ -42,18 +41,14 @@ public class HomePage {
     public HomePage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, PAGE_LOAD_TIMEOUT);
+        this.webActions = new WebActions(driver);
     }
 
     /**
      * Verifies that the Automation Exercise home page loaded successfully.
      */
     public void verifyHomepageLoaded() {
-
-        wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        automationExerciseLogo
-                )
-        );
+        webActions.waitForVisible(automationExerciseLogo);
 
         Assert.assertTrue(
                 driver.getCurrentUrl().startsWith(AppConfig.BASE_URL),
@@ -75,10 +70,7 @@ public class HomePage {
      * Navigates from the home page to the products catalogue.
      */
     public void navigateToProductsPage() {
-
-        wait.until(
-                ExpectedConditions.elementToBeClickable(productsMenu)
-        ).click();
+        webActions.click(productsMenu);
 
         wait.until(
                 ExpectedConditions.urlContains("/products")
@@ -94,10 +86,7 @@ public class HomePage {
      * Navigates to the shopping cart.
      */
     public void navigateToCartPage() {
-
-        wait.until(
-                ExpectedConditions.elementToBeClickable(cartMenu)
-        ).click();
+        webActions.click(cartMenu);
 
         wait.until(
                 ExpectedConditions.urlContains("/view_cart")
@@ -116,10 +105,7 @@ public class HomePage {
      * even though login tests are not part of the first migration phase.</p>
      */
     public void navigateToLoginPage() {
-
-        wait.until(
-                ExpectedConditions.elementToBeClickable(signupLoginMenu)
-        ).click();
+        webActions.click(signupLoginMenu);
 
         wait.until(
                 ExpectedConditions.urlContains("/login")
