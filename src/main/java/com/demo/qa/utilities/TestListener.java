@@ -43,36 +43,44 @@ public final class TestListener implements ITestListener {
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        LOG.info("Test Passed: {}", result.getName());
-        Report.log(Status.PASS, "\tTest Passed", result.getName());
+        try {
+            LOG.info("Test Passed: {}", result.getName());
+            Report.log(Status.PASS, "\tTest Passed", result.getName());
+        } finally {
+            Report.removeTest();
+        }
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        LOG.error("Test Failed: {}", result.getName(), result.getThrowable());
-
-        Report.log(
-                Status.FAIL,
-                "\tTest Failed " + result.getThrowable(),
-                result.getName());
-
-        WebDriver driver = DriverManager.getDriver();
-
-        if (!(driver instanceof TakesScreenshot screenshotDriver)) {
-            LOG.warn("Screenshot unavailable for failed test: {}", result.getName());
-            return;
-        }
-
         try {
-            switch (AppConfig.SCREENSHOT_MODE) {
-                case BASE64 -> captureBase64Screenshot(screenshotDriver);
-                case FILE -> captureFileScreenshot(screenshotDriver, result);
+            LOG.error("Test Failed: {}", result.getName(), result.getThrowable());
+
+            Report.log(
+                    Status.FAIL,
+                    "\tTest Failed " + result.getThrowable(),
+                    result.getName());
+
+            WebDriver driver = DriverManager.getDriver();
+
+            if (!(driver instanceof TakesScreenshot screenshotDriver)) {
+                LOG.warn("Screenshot unavailable for failed test: {}", result.getName());
+                return;
             }
-        } catch (IOException e) {
-            LOG.error(
-                    "Unable to save screenshot for failed test: {}",
-                    result.getName(),
-                    e);
+
+            try {
+                switch (AppConfig.SCREENSHOT_MODE) {
+                    case BASE64 -> captureBase64Screenshot(screenshotDriver);
+                    case FILE -> captureFileScreenshot(screenshotDriver, result);
+                }
+            } catch (IOException e) {
+                LOG.error(
+                        "Unable to save screenshot for failed test: {}",
+                        result.getName(),
+                        e);
+            }
+        } finally {
+            Report.removeTest();
         }
     }
 
@@ -123,16 +131,20 @@ public final class TestListener implements ITestListener {
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        LOG.info("Test Skipped: {}", result.getName());
-        Report.log(
-                Status.SKIP,
-                "\tTest Skipped " + result.getThrowable(),
-                result.getName());
+        try {
+            LOG.info("Test Skipped: {}", result.getName());
+            Report.log(
+                    Status.SKIP,
+                    "\tTest Skipped " + result.getThrowable(),
+                    result.getName());
+        } finally {
+            Report.removeTest();
+        }
     }
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-        // Intentionally not handled.
+        Report.removeTest();
     }
 
     @Override
@@ -142,7 +154,7 @@ public final class TestListener implements ITestListener {
 
     @Override
     public void onFinish(ITestContext context) {
-        Report.endTest();
+        Report.flush();
         LOG.info("---------------- TEST EXECUTION FINISHED ----------------");
     }
 }
