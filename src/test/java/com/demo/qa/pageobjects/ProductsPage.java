@@ -5,16 +5,14 @@ import com.demo.qa.reportmanager.Report;
 import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.testng.Assert;
 
 import java.util.List;
 
 /**
  * Page Object representing the Automation Exercise products page.
  *
- * <p>Encapsulates product catalogue interactions such as searching
- * for products, validating search results, and opening product details.</p>
+ * <p>Encapsulates product catalogue interactions and exposes UI state while
+ * test classes remain responsible for business assertions.</p>
  */
 public class ProductsPage {
 
@@ -39,17 +37,12 @@ public class ProductsPage {
     }
 
     /**
-     * Verifies that the products catalogue has loaded successfully.
+     * Returns whether the products catalogue heading is displayed.
+     *
+     * @return true when the products page is visible
      */
-    public void verifyProductsPageLoaded() {
-        WebElement heading = webActions.waitForVisible(productsHeading);
-
-        Assert.assertTrue(
-                heading.isDisplayed(),
-                "All Products heading is not displayed"
-        );
-
-        Report.log(Status.PASS, "Products page loaded successfully");
+    public boolean isProductsPageDisplayed() {
+        return webActions.waitForVisible(productsHeading).isDisplayed();
     }
 
     /**
@@ -66,32 +59,15 @@ public class ProductsPage {
     }
 
     /**
-     * Verifies that the expected product is present in the search results.
+     * Returns normalized product names displayed in the search results.
      *
-     * @param expectedProduct expected product name
+     * @return product names with consecutive whitespace collapsed
      */
-    public void verifySearchResults(String expectedProduct) {
-        List<String> actualProductNames = webActions.getTexts(productNames)
+    public List<String> getProductNames() {
+        return webActions.getTexts(productNames)
                 .stream()
                 .map(this::normalizeText)
                 .toList();
-
-        String normalizedExpectedProduct = normalizeText(expectedProduct);
-
-        boolean productFound = actualProductNames.stream()
-                .anyMatch(product ->
-                        product.equalsIgnoreCase(normalizedExpectedProduct));
-
-        Assert.assertTrue(
-                productFound,
-                "Expected product '" + normalizedExpectedProduct
-                        + "' was not found. Actual products: " + actualProductNames
-        );
-
-        Report.log(
-                Status.PASS,
-                "Expected product found: " + normalizedExpectedProduct
-        );
     }
 
     /**
@@ -106,7 +82,7 @@ public class ProductsPage {
 
     /**
      * Normalizes UI text so harmless differences in whitespace do not
-     * cause product-name validations to fail.
+     * affect product-name comparisons performed by tests.
      *
      * @param text text to normalize
      * @return trimmed text with consecutive whitespace collapsed to one space
