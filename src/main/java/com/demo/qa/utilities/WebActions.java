@@ -9,6 +9,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Provides reusable synchronized Selenium web interactions.
@@ -87,6 +88,33 @@ public final class WebActions {
         return waitForVisible(locator)
                 .getText()
                 .trim();
+    }
+
+    /**
+     * Returns trimmed visible text for all elements matching the locator.
+     *
+     * @param locator elements locator
+     * @return list of trimmed element texts
+     */
+    public List<String> getTexts(By locator) {
+        return wait.until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(locator)
+        )
+        .stream()
+        .map(WebElement::getText)
+        .map(String::trim)
+        .toList();
+    }
+
+    /**
+     * Waits until the current browser URL contains the supplied value.
+     *
+     * @param urlPart expected URL fragment
+     */
+    public void waitForUrlContains(String urlPart) {
+        wait.until(
+                ExpectedConditions.urlContains(urlPart)
+        );
     }
 
     private void scrollIntoView(WebElement element) {
