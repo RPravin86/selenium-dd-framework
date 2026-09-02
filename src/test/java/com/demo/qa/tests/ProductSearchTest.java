@@ -4,6 +4,7 @@ import com.demo.qa.core.AppConfig;
 import com.demo.qa.core.BaseTest;
 import com.demo.qa.core.ObjectRepo;
 import com.demo.qa.utilities.JsonFileReader;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -31,11 +32,36 @@ public class ProductSearchTest extends BaseTest {
         String searchTerm = testDataMap.get("searchTerm");
         String expectedProduct = testDataMap.get("expectedProduct");
 
-        objectRepo.getHomePage().verifyHomepageLoaded();
+        Assert.assertTrue(
+                objectRepo.getHomePage().isHomePageDisplayed(),
+                "Automation Exercise home page is not displayed"
+        );
+
+        Assert.assertTrue(
+                objectRepo.getHomePage().getCurrentUrl().startsWith(AppConfig.BASE_URL),
+                "Unexpected application URL: " + objectRepo.getHomePage().getCurrentUrl()
+        );
+
         objectRepo.getHomePage().navigateToProductsPage();
-        objectRepo.getProductsPage().verifyProductsPageLoaded();
+
+        Assert.assertTrue(
+                objectRepo.getProductsPage().isProductsPageDisplayed(),
+                "All Products heading is not displayed"
+        );
+
         objectRepo.getProductsPage().searchProduct(searchTerm);
-        objectRepo.getProductsPage().verifySearchResults(expectedProduct);
+
+        List<String> actualProductNames = objectRepo.getProductsPage().getProductNames();
+        String normalizedExpectedProduct = normalizeText(expectedProduct);
+
+        boolean productFound = actualProductNames.stream()
+                .anyMatch(product -> product.equalsIgnoreCase(normalizedExpectedProduct));
+
+        Assert.assertTrue(
+                productFound,
+                "Expected product '" + normalizedExpectedProduct
+                        + "' was not found. Actual products: " + actualProductNames
+        );
     }
 
     /**
@@ -57,5 +83,11 @@ public class ProductSearchTest extends BaseTest {
         return searchData.stream()
                 .map(data -> new Object[]{data})
                 .toArray(Object[][]::new);
+    }
+
+    private String normalizeText(String text) {
+        return text
+                .trim()
+                .replaceAll("\\s+", " ");
     }
 }
