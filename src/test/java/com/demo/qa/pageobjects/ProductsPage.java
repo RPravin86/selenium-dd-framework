@@ -6,11 +6,8 @@ import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
-import java.time.Duration;
 import java.util.List;
 
 /**
@@ -21,9 +18,6 @@ import java.util.List;
  */
 public class ProductsPage {
 
-    private static final Duration WAIT_TIMEOUT = Duration.ofSeconds(20);
-
-    private final WebDriverWait wait;
     private final WebActions webActions;
 
     private final By productsHeading =
@@ -41,7 +35,6 @@ public class ProductsPage {
             By.cssSelector("a[href='/product_details/1']");
 
     public ProductsPage(WebDriver driver) {
-        this.wait = new WebDriverWait(driver, WAIT_TIMEOUT);
         this.webActions = new WebActions(driver);
     }
 
@@ -78,12 +71,8 @@ public class ProductsPage {
      * @param expectedProduct expected product name
      */
     public void verifySearchResults(String expectedProduct) {
-        List<WebElement> products = wait.until(
-                ExpectedConditions.visibilityOfAllElementsLocatedBy(productNames)
-        );
-
-        List<String> actualProductNames = products.stream()
-                .map(WebElement::getText)
+        List<String> actualProductNames = webActions.getTexts(productNames)
+                .stream()
                 .map(this::normalizeText)
                 .toList();
 
@@ -110,10 +99,7 @@ public class ProductsPage {
      */
     public void openFirstProductDetails() {
         webActions.click(firstProductViewLink);
-
-        wait.until(
-                ExpectedConditions.urlContains("/product_details/")
-        );
+        webActions.waitForUrlContains("/product_details/");
 
         Report.log(Status.INFO, "Opened first product details page");
     }
