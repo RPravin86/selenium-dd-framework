@@ -8,11 +8,12 @@ import java.util.Properties;
 /**
  * Centralized configuration provider for the automation framework.
  *
- * <p>Application and framework configuration is loaded from the
- * {@code config.properties} file and exposed through immutable constants.</p>
+ * <p>Configuration values are resolved using the following precedence:
+ * system property, environment variable, then {@code config.properties}.</p>
  *
- * <p>This class is intentionally non-instantiable because configuration
- * values are consumed at framework level rather than through object state.</p>
+ * <p>This allows CI/CD pipelines to override execution settings without
+ * modifying repository configuration while preserving convenient local
+ * defaults in {@code config.properties}.</p>
  */
 public final class AppConfig {
 
@@ -28,7 +29,7 @@ public final class AppConfig {
     public static final String BASE_URL =
             getRequiredProperty("baseUrl");
 
-    /** Default browser used when no browser is supplied through TestNG. */
+    /** Browser used for the test execution. */
     public static final String BROWSER_NAME =
             getRequiredProperty("browser");
 
@@ -60,19 +61,53 @@ public final class AppConfig {
     public static final String TEST_RESOURCE_PATH =
             ROOT + "/src/test/resources/test-data";
 
+    /**
+     * Resolves a required configuration value using runtime overrides first.
+     *
+     * <p>Resolution order:</p>
+     * <ol>
+     *     <li>Java system property, for example {@code -Dbrowser=firefox}</li>
+     *     <li>Environment variable, for example {@code BROWSER=firefox}</li>
+     *     <li>{@code config.properties}</li>
+     * </ol>
+     *
+     * @param propertyName configuration property name
+     * @return resolved non-blank configuration value
+     */
     private static String getRequiredProperty(String propertyName) {
-        String value = CONFIG.getProperty(propertyName);
+        String value = System.getProperty(propertyName);
+
+        if (value == null || value.isBlank()) {
+            value = System.getenv(toEnvironmentKey(propertyName));
+        }
+
+        if (value == null || value.isBlank()) {
+            value = CONFIG.getProperty(propertyName);
+        }
 
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(
                     "Required configuration property '"
                             + propertyName
-                            + "' is missing or blank in "
+                            + "' is missing. Supply it as a system property, "
+                            + "environment variable, or in "
                             + CONFIG_FILE_PATH
             );
         }
 
         return value.trim();
+    }
+
+    /**
+     * Converts a camelCase property name to an uppercase environment key.
+     *
+     * <p>Examples: {@code baseUrl -> BASE_URL} and
+     * {@code acceptInsecureCerts -> ACCEPT_INSECURE_CERTS}.</p>
+     */
+    private static String toEnvironmentKey(String propertyName) {
+        return propertyName
+                .replaceAll("([a-z0-9])([A-Z])", "$1_$2")
+                .toUpperCase();
     }
 
     private static boolean getBooleanProperty(String propertyName) {
