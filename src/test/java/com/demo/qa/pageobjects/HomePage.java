@@ -1,29 +1,20 @@
 package com.demo.qa.pageobjects;
 
 import com.aventstack.extentreports.Status;
-import com.demo.qa.core.AppConfig;
 import com.demo.qa.reportmanager.Report;
 import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.Assert;
-
-import java.time.Duration;
 
 /**
  * Page Object representing the Automation Exercise home page.
  *
- * <p>The page exposes only high-level user actions and validations so
- * test classes remain independent from Selenium locator details.</p>
+ * <p>The page exposes high-level user actions and UI state while test
+ * classes remain responsible for business assertions.</p>
  */
 public class HomePage {
 
-    private static final Duration PAGE_LOAD_TIMEOUT = Duration.ofSeconds(20);
-
     private final WebDriver driver;
-    private final WebDriverWait wait;
     private final WebActions webActions;
 
     private final By productsMenu =
@@ -40,30 +31,25 @@ public class HomePage {
 
     public HomePage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, PAGE_LOAD_TIMEOUT);
         this.webActions = new WebActions(driver);
     }
 
     /**
-     * Verifies that the Automation Exercise home page loaded successfully.
+     * Returns whether the Automation Exercise logo is displayed.
+     *
+     * @return true when the home-page logo is visible
      */
-    public void verifyHomepageLoaded() {
-        webActions.waitForVisible(automationExerciseLogo);
+    public boolean isHomePageDisplayed() {
+        return webActions.waitForVisible(automationExerciseLogo).isDisplayed();
+    }
 
-        Assert.assertTrue(
-                driver.getCurrentUrl().startsWith(AppConfig.BASE_URL),
-                "Unexpected application URL: " + driver.getCurrentUrl()
-        );
-
-        Assert.assertTrue(
-                driver.findElement(automationExerciseLogo).isDisplayed(),
-                "Automation Exercise logo is not displayed"
-        );
-
-        Report.log(
-                Status.PASS,
-                "Automation Exercise home page loaded successfully"
-        );
+    /**
+     * Returns the current browser URL.
+     *
+     * @return current URL
+     */
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
     }
 
     /**
@@ -71,10 +57,7 @@ public class HomePage {
      */
     public void navigateToProductsPage() {
         webActions.click(productsMenu);
-
-        wait.until(
-                ExpectedConditions.urlContains("/products")
-        );
+        webActions.waitForUrlContains("/products");
 
         Report.log(
                 Status.PASS,
@@ -87,10 +70,7 @@ public class HomePage {
      */
     public void navigateToCartPage() {
         webActions.click(cartMenu);
-
-        wait.until(
-                ExpectedConditions.urlContains("/view_cart")
-        );
+        webActions.waitForUrlContains("/view_cart");
 
         Report.log(
                 Status.PASS,
@@ -106,10 +86,7 @@ public class HomePage {
      */
     public void navigateToLoginPage() {
         webActions.click(signupLoginMenu);
-
-        wait.until(
-                ExpectedConditions.urlContains("/login")
-        );
+        webActions.waitForUrlContains("/login");
 
         Report.log(
                 Status.PASS,
