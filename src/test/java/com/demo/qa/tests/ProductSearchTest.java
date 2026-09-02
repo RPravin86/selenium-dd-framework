@@ -3,6 +3,8 @@ package com.demo.qa.tests;
 import com.demo.qa.core.AppConfig;
 import com.demo.qa.core.BaseTest;
 import com.demo.qa.core.ObjectRepo;
+import com.demo.qa.pageobjects.HomePage;
+import com.demo.qa.pageobjects.ProductsPage;
 import com.demo.qa.utilities.JsonFileReader;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -27,31 +29,31 @@ public class ProductSearchTest extends BaseTest {
             description = "Verify product search results"
     )
     public void verifyProductSearch(Map<String, String> testDataMap) {
-        ObjectRepo objectRepo = ObjectRepo.getInstance();
+        HomePage homePage = ObjectRepo.getInstance().getHomePage();
 
         String searchTerm = testDataMap.get("searchTerm");
         String expectedProduct = testDataMap.get("expectedProduct");
 
         Assert.assertTrue(
-                objectRepo.getHomePage().isHomePageDisplayed(),
+                homePage.isHomePageDisplayed(),
                 "Automation Exercise home page is not displayed"
         );
 
         Assert.assertTrue(
-                objectRepo.getHomePage().getCurrentUrl().startsWith(AppConfig.BASE_URL),
-                "Unexpected application URL: " + objectRepo.getHomePage().getCurrentUrl()
+                homePage.getCurrentUrl().startsWith(AppConfig.BASE_URL),
+                "Unexpected application URL: " + homePage.getCurrentUrl()
         );
 
-        objectRepo.getHomePage().navigateToProductsPage();
+        ProductsPage productsPage = homePage.navigateToProductsPage();
 
         Assert.assertTrue(
-                objectRepo.getProductsPage().isProductsPageDisplayed(),
+                productsPage.isProductsPageDisplayed(),
                 "All Products heading is not displayed"
         );
 
-        objectRepo.getProductsPage().searchProduct(searchTerm);
+        productsPage.searchProduct(searchTerm);
 
-        List<String> actualProductNames = objectRepo.getProductsPage().getProductNames();
+        List<String> actualProductNames = productsPage.getProductNames();
         String normalizedExpectedProduct = normalizeText(expectedProduct);
 
         boolean productFound = actualProductNames.stream()
