@@ -5,13 +5,13 @@ import com.demo.qa.core.BaseTest;
 import com.demo.qa.core.ObjectRepo;
 import com.demo.qa.pageobjects.HomePage;
 import com.demo.qa.pageobjects.ProductsPage;
+import com.demo.qa.testdata.ProductSearchData;
 import com.demo.qa.utilities.JsonFileReader;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Data-driven product search tests for Automation Exercise.
@@ -22,17 +22,17 @@ public class ProductSearchTest extends BaseTest {
      * Verifies that products can be searched and that the expected
      * product appears in the search results.
      *
-     * @param testDataMap search test data
+     * @param testData typed product search test data
      */
     @Test(
             dataProvider = "productSearchData",
             description = "Verify product search results"
     )
-    public void verifyProductSearch(Map<String, String> testDataMap) {
+    public void verifyProductSearch(ProductSearchData testData) {
         HomePage homePage = ObjectRepo.getInstance().getHomePage();
 
-        String searchTerm = testDataMap.get("searchTerm");
-        String expectedProduct = testDataMap.get("expectedProduct");
+        String searchTerm = testData.searchTerm();
+        String expectedProduct = testData.expectedProduct();
 
         Assert.assertTrue(
                 homePage.isHomePageDisplayed(),
@@ -67,7 +67,7 @@ public class ProductSearchTest extends BaseTest {
     }
 
     /**
-     * Supplies JSON-based product search data to the test and allows
+     * Supplies typed JSON-based product search data to the test and allows
      * independent datasets to execute concurrently.
      *
      * @return TestNG data-provider dataset
@@ -77,9 +77,10 @@ public class ProductSearchTest extends BaseTest {
             parallel = true
     )
     public Object[][] productSearchData() throws Exception {
-        List<Map<String, String>> searchData = JsonFileReader.readJson(
+        List<ProductSearchData> searchData = JsonFileReader.readJson(
                 AppConfig.TEST_RESOURCE_PATH + "/product-search.json",
-                "SearchData"
+                "SearchData",
+                ProductSearchData.class
         );
 
         return searchData.stream()
