@@ -54,8 +54,10 @@ public class HomePage {
 
     /**
      * Navigates from the home page to the products catalogue.
+     *
+     * @return products page reached after navigation
      */
-    public void navigateToProductsPage() {
+    public ProductsPage navigateToProductsPage() {
         webActions.click(productsMenu);
         webActions.waitForUrlContains("/products");
 
@@ -63,6 +65,8 @@ public class HomePage {
                 Status.PASS,
                 "Navigated to Products page"
         );
+
+        return new ProductsPage(driver);
     }
 
     /**
