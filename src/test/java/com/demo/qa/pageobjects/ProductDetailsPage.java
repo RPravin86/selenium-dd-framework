@@ -12,6 +12,7 @@ import org.openqa.selenium.WebDriver;
  */
 public class ProductDetailsPage {
 
+    private final WebDriver driver;
     private final WebActions webActions;
 
     private final By productName = By.cssSelector(".product-information h2");
@@ -30,7 +31,12 @@ public class ProductDetailsPage {
             "//div[@class='product-information']//b[text()='Brand:']/parent::p"
     );
 
+    private final By addToCartButton = By.cssSelector("button.cart");
+    private final By addedToCartModal = By.id("cartModal");
+    private final By viewCartLink = By.cssSelector("#cartModal a[href='/view_cart']");
+
     public ProductDetailsPage(WebDriver driver) {
+        this.driver = driver;
         this.webActions = new WebActions(driver);
     }
 
@@ -56,5 +62,20 @@ public class ProductDetailsPage {
 
     public String getBrand() {
         return webActions.getText(brand);
+    }
+
+    /**
+     * Adds the displayed product to the cart and navigates to the cart
+     * from the confirmation modal.
+     *
+     * @return cart page reached after adding the product
+     */
+    public CartPage addProductAndViewCart() {
+        webActions.click(addToCartButton);
+        webActions.waitForVisible(addedToCartModal);
+        webActions.click(viewCartLink);
+        webActions.waitForUrlContains("/view_cart");
+
+        return new CartPage(driver);
     }
 }
