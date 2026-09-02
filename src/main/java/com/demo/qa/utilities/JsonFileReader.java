@@ -1,13 +1,11 @@
 package com.demo.qa.utilities;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public class JsonFileReader {
 
@@ -26,28 +24,33 @@ public class JsonFileReader {
 
     /**
      * Reads a JSON array from the specified root-level key and converts each
-     * array element into a map of string key/value pairs.
+     * array element into the requested data type.
      *
      * @param fileName path of the JSON file
      * @param jsonKey root-level key containing the JSON array
-     * @return list of JSON objects represented as string maps
-     * @throws IOException if the file cannot be read or parsed
+     * @param dataType target type for each JSON array element
+     * @param <T> target data type
+     * @return list of typed JSON objects
+     * @throws IOException if the file cannot be read, parsed, or the key
+     *                     does not contain an array
      */
-    public static List<Map<String, String>> readJson(
+    public static <T> List<T> readJson(
             String fileName,
-            String jsonKey) throws IOException {
+            String jsonKey,
+            Class<T> dataType) throws IOException {
 
         JsonNode rootNode = OBJECT_MAPPER.readTree(new File(fileName));
         JsonNode dataNode = rootNode.get(jsonKey);
 
         if (dataNode == null || !dataNode.isArray()) {
-            throw new IOException("JSON key '" + jsonKey + "' does not contain an array: " + fileName);
+            throw new IOException(
+                    "JSON key '" + jsonKey
+                            + "' does not contain an array: " + fileName
+            );
         }
 
-        return OBJECT_MAPPER.convertValue(
-                dataNode,
-                new TypeReference<List<Map<String, String>>>() {
-                });
+        return OBJECT_MAPPER.readerForListOf(dataType)
+                .readValue(dataNode);
     }
 
     /**
