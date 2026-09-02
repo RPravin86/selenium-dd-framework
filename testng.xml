@@ -14,6 +14,7 @@
         <classes>
             <class name="com.demo.qa.tests.ProductSearchTest"/>
             <class name="com.demo.qa.tests.ProductDetailsTest"/>
+            <class name="com.demo.qa.tests.AddToCartTest"/>
         </classes>
     </test>
 
