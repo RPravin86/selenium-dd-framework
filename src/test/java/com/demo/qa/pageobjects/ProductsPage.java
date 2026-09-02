@@ -16,6 +16,7 @@ import java.util.List;
  */
 public class ProductsPage {
 
+    private final WebDriver driver;
     private final WebActions webActions;
 
     private final By productsHeading =
@@ -33,6 +34,7 @@ public class ProductsPage {
             By.cssSelector("a[href='/product_details/1']");
 
     public ProductsPage(WebDriver driver) {
+        this.driver = driver;
         this.webActions = new WebActions(driver);
     }
 
@@ -72,12 +74,16 @@ public class ProductsPage {
 
     /**
      * Opens the details page for the first product in the catalogue.
+     *
+     * @return product details page reached after navigation
      */
-    public void openFirstProductDetails() {
+    public ProductDetailsPage openFirstProductDetails() {
         webActions.click(firstProductViewLink);
         webActions.waitForUrlContains("/product_details/");
 
         Report.log(Status.INFO, "Opened first product details page");
+
+        return new ProductDetailsPage(driver);
     }
 
     /**
