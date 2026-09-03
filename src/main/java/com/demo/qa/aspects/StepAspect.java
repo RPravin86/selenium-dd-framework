@@ -13,7 +13,7 @@ import org.aspectj.lang.annotation.Aspect;
 @Aspect
 public class StepAspect {
 
-    @Around("@annotation(step)")
+    @Around("execution(* *(..)) && @annotation(step)")
     public Object reportStep(
             ProceedingJoinPoint joinPoint,
             Step step) throws Throwable {
