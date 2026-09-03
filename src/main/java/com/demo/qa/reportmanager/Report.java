@@ -18,6 +18,9 @@ public final class Report {
     private static final ThreadLocal<ExtentTest> EXTENT_TEST =
             new ThreadLocal<>();
 
+    private static final ThreadLocal<ExtentTest> EXTENT_STEP =
+            new ThreadLocal<>();
+
     private Report() {
         // Utility class - no instantiation.
     }
@@ -46,10 +49,44 @@ public final class Report {
     }
 
     /**
-     * Removes the current thread's ExtentTest reference after result
+     * Creates a business-step node beneath the current test.
+     *
+     * @param description business-readable step description
+     */
+    public static void startStep(String description) {
+        ExtentTest step = getRequiredTest().createNode(description);
+        EXTENT_STEP.set(step);
+    }
+
+    /**
+     * Marks the current business step as successfully completed.
+     */
+    public static void passStep() {
+        getRequiredStep().pass("Completed successfully");
+    }
+
+    /**
+     * Marks the current business step as failed and records the original error.
+     *
+     * @param throwable failure raised by the intercepted step
+     */
+    public static void failStep(Throwable throwable) {
+        getRequiredStep().fail(throwable);
+    }
+
+    /**
+     * Removes the current thread's business-step reference.
+     */
+    public static void endStep() {
+        EXTENT_STEP.remove();
+    }
+
+    /**
+     * Removes the current thread's ExtentTest references after result
      * processing has completed.
      */
     public static void removeTest() {
+        EXTENT_STEP.remove();
         EXTENT_TEST.remove();
     }
 
@@ -88,5 +125,17 @@ public final class Report {
         }
 
         return test;
+    }
+
+    private static ExtentTest getRequiredStep() {
+        ExtentTest step = EXTENT_STEP.get();
+
+        if (step == null) {
+            throw new IllegalStateException(
+                    "Extent step has not been initialized for thread "
+                            + Thread.currentThread().getId());
+        }
+
+        return step;
     }
 }
