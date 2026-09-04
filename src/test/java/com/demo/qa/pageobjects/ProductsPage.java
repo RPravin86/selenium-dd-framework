@@ -1,7 +1,5 @@
 package com.demo.qa.pageobjects;
 
-import com.aventstack.extentreports.Status;
-import com.demo.qa.reportmanager.Report;
 import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -56,8 +54,6 @@ public class ProductsPage {
         webActions.type(searchInput, searchTerm);
         webActions.click(searchButton);
         webActions.waitForVisible(searchedProductsHeading);
-
-        Report.log(Status.INFO, "Product search performed for: " + searchTerm);
     }
 
     /**
@@ -80,8 +76,6 @@ public class ProductsPage {
     public ProductDetailsPage openFirstProductDetails() {
         webActions.click(firstProductViewLink);
         webActions.waitForUrlContains("/product_details/");
-
-        Report.log(Status.INFO, "Opened first product details page");
 
         return new ProductDetailsPage(driver);
     }
