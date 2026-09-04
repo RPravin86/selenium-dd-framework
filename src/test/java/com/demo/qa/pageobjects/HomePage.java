@@ -1,7 +1,5 @@
 package com.demo.qa.pageobjects;
 
-import com.aventstack.extentreports.Status;
-import com.demo.qa.reportmanager.Report;
 import com.demo.qa.utilities.WebActions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -61,11 +59,6 @@ public class HomePage {
         webActions.click(productsMenu);
         webActions.waitForUrlContains("/products");
 
-        Report.log(
-                Status.PASS,
-                "Navigated to Products page"
-        );
-
         return new ProductsPage(driver);
     }
 
@@ -75,11 +68,6 @@ public class HomePage {
     public void navigateToCartPage() {
         webActions.click(cartMenu);
         webActions.waitForUrlContains("/view_cart");
-
-        Report.log(
-                Status.PASS,
-                "Navigated to Cart page"
-        );
     }
 
     /**
@@ -91,10 +79,5 @@ public class HomePage {
     public void navigateToLoginPage() {
         webActions.click(signupLoginMenu);
         webActions.waitForUrlContains("/login");
-
-        Report.log(
-                Status.PASS,
-                "Navigated to Login page"
-        );
     }
 }
