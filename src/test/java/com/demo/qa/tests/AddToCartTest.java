@@ -1,12 +1,9 @@
 package com.demo.qa.tests;
 
 import com.demo.qa.core.BaseTest;
-import com.demo.qa.core.ObjectRepo;
+import com.demo.qa.expectations.CartExpectations;
 import com.demo.qa.pageobjects.CartPage;
-import com.demo.qa.pageobjects.HomePage;
-import com.demo.qa.pageobjects.ProductDetailsPage;
-import com.demo.qa.pageobjects.ProductsPage;
-import org.testng.Assert;
+import com.demo.qa.tasks.CartTasks;
 import org.testng.annotations.Test;
 
 /**
@@ -16,45 +13,20 @@ public class AddToCartTest extends BaseTest {
 
     @Test(description = "Verify product can be added to cart")
     public void verifyProductAddedToCart() {
-        HomePage homePage = ObjectRepo.getInstance().getHomePage();
+        CartTasks cartTasks = new CartTasks();
+        CartExpectations cartExpectations = new CartExpectations();
 
-        Assert.assertTrue(
-                homePage.isHomePageDisplayed(),
-                "Automation Exercise home page is not displayed"
-        );
+        cartTasks.navigateToProducts();
+        cartTasks.openFirstProduct();
 
-        ProductsPage productsPage = homePage.navigateToProductsPage();
+        CartPage cartPage = cartTasks.addProductToCart();
 
-        Assert.assertTrue(
-                productsPage.isProductsPageDisplayed(),
-                "Products page is not displayed"
-        );
-
-        ProductDetailsPage productDetailsPage = productsPage.openFirstProductDetails();
-        CartPage cartPage = productDetailsPage.addProductAndViewCart();
-
-        Assert.assertEquals(
-                cartPage.getProductName(),
+        cartExpectations.productShouldBeDisplayed(
+                cartPage,
                 "Blue Top",
-                "Unexpected product in cart"
-        );
-
-        Assert.assertEquals(
-                cartPage.getProductPrice(),
                 "Rs. 500",
-                "Unexpected product price"
-        );
-
-        Assert.assertEquals(
-                cartPage.getProductQuantity(),
                 "1",
-                "Unexpected product quantity"
-        );
-
-        Assert.assertEquals(
-                cartPage.getProductTotal(),
-                "Rs. 500",
-                "Unexpected cart total"
+                "Rs. 500"
         );
     }
 }
