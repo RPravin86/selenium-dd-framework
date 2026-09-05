@@ -6,6 +6,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
@@ -76,6 +77,18 @@ public final class WebActions {
         WebElement element = waitForVisible(locator);
         element.clear();
         element.sendKeys(text);
+    }
+
+    /**
+     * Selects an option from a standard HTML select element
+     * using its visible text.
+     *
+     * @param locator select element locator
+     * @param text visible option text
+     */
+    public void selectByVisibleText(By locator, String text) {
+        WebElement element = waitForVisible(locator);
+        new Select(element).selectByVisibleText(text);
     }
 
     /**
